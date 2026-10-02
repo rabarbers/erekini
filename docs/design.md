@@ -14,7 +14,7 @@ Detalizētus dizaina lēmumus dokumentē `docs` mapē.
 
 Lapa ir viena darba forma, nevis soļu vednis — visus datus var redzēt un labot vienlaikus.
 
-- Galvene: lietotnes nosaukums un poga “Jauns rēķins”.
+- Galvene: lietotnes nosaukums ar versijas numuru un poga “Jauns rēķins”.
 - Galvenā kolonna (desktop ¾ platuma) ar numurētām sadaļu kartēm:
   1. Rēķina dokuments (augšupielāde, nav obligāta);
   2. Rēķina pamatinformācija;
