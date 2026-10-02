@@ -1,0 +1,15 @@
+{
+  "name": "e-rekini",
+  "version": "1.0.0",
+  "private": true,
+  "description": "E-rēķinu (Peppol BIS Billing 3.0) sagatavošanas tīmekļa lietotne",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test \"test/**/*.test.js\"",
+    "extract-examples": "node tools/extract-examples.js"
+  }
+}

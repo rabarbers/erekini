@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="lv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-rēķinu sagatavošana</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+  <link rel="stylesheet" href="css/app.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="container-fluid d-flex align-items-center gap-3">
+      <i class="bi bi-receipt-cutoff app-logo" aria-hidden="true"></i>
+      <div class="me-auto">
+        <h1 class="h5 mb-0">E-rēķinu sagatavošana</h1>
+        <div class="small app-subtitle">Augšupielādējiet rēķinu vai ievadiet datus, pārbaudiet tos un lejupielādējiet e-rēķina XML</div>
+      </div>
+      <button type="button" id="btn-new" class="btn btn-sm btn-outline-light">
+        <i class="bi bi-file-earmark-plus" aria-hidden="true"></i> Jauns rēķins
+      </button>
+    </div>
+  </header>
+
+  <main class="container-fluid py-3">
+    <div class="row g-3">
+      <div class="col-xl-9">
+        <form id="invoice-form" novalidate autocomplete="off">
+
+          <section class="card app-card mb-3" aria-labelledby="h-upload">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">1</span>
+              <h2 id="h-upload">Rēķina dokuments</h2>
+              <span class="card-hint">nav obligāts — formu var aizpildīt arī manuāli</span>
+            </div>
+            <div class="card-body">
+              <div id="dropzone" class="dropzone">
+                <i class="bi bi-cloud-arrow-up dropzone-icon" aria-hidden="true"></i>
+                <div class="flex-grow-1">
+                  <div><strong>Ievelciet rēķina failu šeit</strong> vai
+                    <label class="btn btn-sm btn-primary ms-1" for="file-input">
+                      <i class="bi bi-folder2-open" aria-hidden="true"></i> Izvēlēties failu
+                    </label>
+                  </div>
+                  <div class="small text-body-secondary mt-1">
+                    PDF, DOCX, PNG vai JPG, līdz 20 MB. Dati tiks nolasīti automātiski — pēc tam tie jāpārbauda.
+                  </div>
+                </div>
+                <input type="file" id="file-input" class="visually-hidden"
+                       accept=".pdf,.docx,.png,.jpg,.jpeg,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/png,image/jpeg">
+              </div>
+              <div id="upload-status" class="mt-2" role="status" aria-live="polite"></div>
+            </div>
+          </section>
+
+          <section class="card app-card mb-3" aria-labelledby="h-basic">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">2</span>
+              <h2 id="h-basic">Rēķina pamatinformācija</h2>
+            </div>
+            <div class="card-body">
+              <div id="basic-fields" class="row g-2"></div>
+            </div>
+          </section>
+
+          <div class="row g-3 mb-3">
+            <div class="col-lg-6">
+              <section class="card app-card h-100" aria-labelledby="h-seller">
+                <div class="card-header">
+                  <span class="step" aria-hidden="true">3</span>
+                  <h2 id="h-seller">Nosūtītājs (piegādātājs)</h2>
+                </div>
+                <div class="card-body">
+                  <div id="seller-fields" class="row g-2"></div>
+                  <h3 class="subheading">Maksājuma rekvizīti</h3>
+                  <div id="payment-fields" class="row g-2"></div>
+                </div>
+              </section>
+            </div>
+            <div class="col-lg-6">
+              <section class="card app-card h-100" aria-labelledby="h-buyer">
+                <div class="card-header">
+                  <span class="step" aria-hidden="true">4</span>
+                  <h2 id="h-buyer">Saņēmējs (pircējs)</h2>
+                </div>
+                <div class="card-body">
+                  <div id="buyer-fields" class="row g-2"></div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <section class="card app-card mb-3" aria-labelledby="h-lines">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">5</span>
+              <h2 id="h-lines">Rēķina pozīcijas</h2>
+              <span id="lines-count" class="card-hint"></span>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-sm align-top mb-0 lines-table">
+                <thead>
+                  <tr>
+                    <th scope="col" class="col-no">Nr.</th>
+                    <th scope="col">Nosaukums <span class="req-mark" aria-hidden="true">*</span></th>
+                    <th scope="col" class="col-qty">Daudzums <span class="req-mark" aria-hidden="true">*</span></th>
+                    <th scope="col" class="col-unit">Mērvienība <span class="req-mark" aria-hidden="true">*</span></th>
+                    <th scope="col" class="col-price">Cena bez PVN <span class="req-mark" aria-hidden="true">*</span></th>
+                    <th scope="col" class="col-vat">PVN <span class="req-mark" aria-hidden="true">*</span></th>
+                    <th scope="col" class="col-amount text-end">Summa bez PVN</th>
+                    <th scope="col" class="col-actions"><span class="visually-hidden">Darbības</span></th>
+                  </tr>
+                </thead>
+                <tbody id="lines-body"></tbody>
+              </table>
+              <div id="lines-empty" class="lines-empty" data-anchor="lines" tabindex="-1" hidden>
+                Rēķinā vēl nav nevienas pozīcijas.
+              </div>
+              <div class="p-2 border-top">
+                <button type="button" id="btn-add-line" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-plus-lg" aria-hidden="true"></i> Pievienot pozīciju
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card app-card mb-3" aria-labelledby="h-totals">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">6</span>
+              <h2 id="h-totals">PVN un kopsummas</h2>
+              <span class="card-hint">aprēķina automātiski no pozīcijām</span>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-lg-7">
+                  <h3 class="subheading mt-0">PVN sadalījums</h3>
+                  <table class="table table-sm vat-table mb-2">
+                    <thead>
+                      <tr>
+                        <th scope="col">PVN veids</th>
+                        <th scope="col" class="text-end">Likme</th>
+                        <th scope="col" class="text-end">Summa bez PVN</th>
+                        <th scope="col" class="text-end">PVN summa</th>
+                      </tr>
+                    </thead>
+                    <tbody id="vat-breakdown"></tbody>
+                  </table>
+                  <div id="vat-reasons" class="row g-2"></div>
+                </div>
+                <div class="col-lg-5">
+                  <h3 class="subheading mt-0">Kopsummas</h3>
+                  <div id="totals"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </form>
+      </div>
+
+      <aside class="col-xl-3" aria-label="Pārbaude un e-rēķina izveide">
+        <div class="side-panel">
+          <section class="card app-card mb-3" aria-labelledby="h-validation">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">7</span>
+              <h2 id="h-validation">Datu pārbaude</h2>
+            </div>
+            <div class="card-body">
+              <div id="validation-summary" role="status" aria-live="polite"></div>
+              <ol id="validation-list" class="issue-list"></ol>
+            </div>
+          </section>
+
+          <section class="card app-card" aria-labelledby="h-xml">
+            <div class="card-header">
+              <span class="step" aria-hidden="true">8</span>
+              <h2 id="h-xml">E-rēķina XML</h2>
+            </div>
+            <div class="card-body">
+              <p class="small text-body-secondary mb-2">
+                E-rēķins tiek veidots Peppol BIS Billing 3.0 formātā. To var izveidot tikai tad, kad datos nav kļūdu.
+              </p>
+              <button type="button" id="btn-generate" class="btn btn-success w-100">
+                <i class="bi bi-download" aria-hidden="true"></i> Izveidot un lejupielādēt XML
+              </button>
+              <div id="xml-status" class="mt-2" role="status" aria-live="polite"></div>
+            </div>
+          </section>
+        </div>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

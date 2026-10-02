@@ -1,0 +1,35 @@
+# Lokālie noslēpumi un vides iestatījumi
+ApiKey.txt
+ApiKey.txt.*
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Node.js atkarības un kešatmiņa
+node_modules/
+.npm/
+.cache/
+
+# Žurnāli un testu pārklājuma rezultāti
+*.log
+coverage/
+.nyc_output/
+
+# Personiskie rīku iestatījumi (koplietojamās konfigurācijas saglabā Git)
+.claude/settings.local.json
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.history/
+
+# Operētājsistēmas un redaktoru pagaidu faili
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+~$*

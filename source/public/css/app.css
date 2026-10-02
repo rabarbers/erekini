@@ -1,0 +1,272 @@
+/* E-rēķinu lietotnes stili. Pamatā Bootstrap 5.3; šeit tikai izkārtojuma un blīvuma pielāgojumi. */
+
+:root {
+  --app-bg: #f2f4f7;
+  --app-navy: #1f3b63;
+  --app-border: #dbe1e8;
+  --app-muted: #5c6b7a;
+}
+
+body {
+  background: var(--app-bg);
+  font-size: 0.9rem;
+}
+
+/* ---------- Galvene ---------- */
+.app-header {
+  background: var(--app-navy);
+  color: #fff;
+  padding: 0.6rem 0;
+}
+.app-logo { font-size: 1.6rem; }
+.app-subtitle { color: rgba(255, 255, 255, 0.75); }
+
+/* ---------- Sadaļu kartes ---------- */
+.app-card {
+  border-color: var(--app-border);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+}
+.app-card > .card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fff;
+  border-bottom-color: var(--app-border);
+  padding: 0.55rem 0.9rem;
+}
+.app-card > .card-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+.app-card > .card-body { padding: 0.8rem 0.9rem; }
+.card-hint {
+  margin-left: auto;
+  color: var(--app-muted);
+  font-size: 0.8rem;
+}
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--app-navy);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.subheading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--app-muted);
+  margin: 1rem 0 0.4rem;
+}
+
+/* ---------- Formas lauki ---------- */
+.form-label {
+  font-size: 0.8rem;
+  color: #3b4652;
+  margin-bottom: 0.15rem;
+}
+.form-label.required::after {
+  content: " *";
+  color: var(--bs-danger);
+}
+.req-mark { color: var(--bs-danger); }
+.form-text { font-size: 0.75rem; margin-top: 0.15rem; }
+.warning-feedback {
+  font-size: 0.78rem;
+  color: var(--bs-warning-text-emphasis);
+  margin-top: 0.2rem;
+}
+.form-control.has-warning,
+.form-select.has-warning {
+  border-color: var(--bs-warning);
+}
+.derived-hint { font-size: 0.75rem; color: var(--app-muted); }
+
+/* ---------- Augšupielāde ---------- */
+.dropzone {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  border: 2px dashed #b7c3d0;
+  border-radius: 0.5rem;
+  padding: 0.9rem 1rem;
+  background: #f8fafc;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.dropzone.dragover {
+  border-color: var(--bs-primary);
+  background: var(--bs-primary-bg-subtle);
+}
+/* Faila izvēles lauks ir vizuāli paslēpts — fokusu rāda uz visa augšupielādes lauka. */
+.dropzone:focus-within {
+  border-color: var(--bs-primary);
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+.dropzone.busy { opacity: 0.6; pointer-events: none; }
+.dropzone-icon { font-size: 2rem; color: var(--app-navy); }
+
+/* ---------- Pozīciju tabula ---------- */
+.lines-table th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3b4652;
+  background: #f8fafc;
+  white-space: nowrap;
+  padding: 0.45rem 0.4rem;
+}
+.lines-table td { padding: 0.35rem 0.4rem; }
+.lines-table .col-no { width: 2.6rem; }
+.lines-table .col-qty { width: 5.5rem; }
+.lines-table .col-unit { width: 9rem; }
+.lines-table .col-price { width: 7rem; }
+.lines-table .col-vat { width: 10.5rem; }
+.lines-table .col-amount { width: 7.5rem; }
+.lines-table .col-actions { width: 2.6rem; }
+.lines-table td.line-no {
+  color: var(--app-muted);
+  padding-top: 0.55rem;
+  text-align: right;
+}
+.lines-table td.line-amount {
+  padding-top: 0.55rem;
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lines-table td.line-amount .warning-feedback { font-weight: 400; }
+.lines-empty {
+  padding: 0.9rem;
+  color: var(--app-muted);
+  text-align: center;
+}
+.lines-empty.is-invalid { color: var(--bs-danger); }
+.vat-rate-input { margin-top: 0.3rem; }
+
+@media (max-width: 991.98px) {
+  .lines-table thead { display: none; }
+  .lines-table tr {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.35rem 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border-bottom: 1px solid var(--app-border);
+  }
+  .lines-table td {
+    display: block;
+    border: 0;
+    padding: 0;
+  }
+  .lines-table td::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.75rem;
+    color: var(--app-muted);
+  }
+  .lines-table td.line-no { grid-column: 1 / 6; grid-row: 1; text-align: left; padding-top: 0.3rem; font-weight: 600; }
+  .lines-table td.line-no::before { display: none; }
+  .lines-table td.line-actions { grid-column: 6 / 7; grid-row: 1; text-align: right; }
+  .lines-table td.line-actions::before { display: none; }
+  .lines-table td.line-name,
+  .lines-table td.line-amount { grid-column: 1 / -1; }
+  .lines-table td.line-qty,
+  .lines-table td.line-unit,
+  .lines-table td.line-price,
+  .lines-table td.line-vat { grid-column: span 3; }
+  .lines-table td.line-amount { padding-top: 0; }
+}
+
+/* ---------- PVN un kopsummas ---------- */
+.vat-table th {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #3b4652;
+  background: #f8fafc;
+}
+.vat-table td,
+.totals-table td { font-variant-numeric: tabular-nums; }
+.totals-table { width: 100%; margin-bottom: 0; }
+.totals-table th,
+.totals-table td {
+  padding: 0.3rem 0.4rem;
+  border-bottom: 1px solid var(--app-border);
+  vertical-align: middle;
+}
+.totals-table thead th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  border-bottom-width: 2px;
+}
+.totals-table tbody th { font-weight: 400; }
+.totals-table .total-due th,
+.totals-table .total-due td {
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: 0;
+}
+.totals-table .doc-value { color: var(--app-muted); }
+.totals-table .doc-value.mismatch { color: var(--bs-warning-text-emphasis); font-weight: 600; }
+.totals-table .prepaid-input { max-width: 8.5rem; margin-left: auto; text-align: right; }
+
+/* ---------- Sānu panelis ---------- */
+@media (min-width: 1200px) {
+  .side-panel {
+    position: sticky;
+    top: 1rem;
+  }
+}
+.validation-ok,
+.validation-bad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+.validation-ok { color: var(--bs-success-text-emphasis); }
+.validation-bad { color: var(--bs-danger-text-emphasis); }
+.validation-ok .bi,
+.validation-bad .bi { font-size: 1.2rem; line-height: 1.2; }
+.issue-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.6rem 0 0;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+.issue-list li + li { margin-top: 0.35rem; }
+.issue {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-left: 3px solid var(--bs-danger);
+  background: var(--bs-danger-bg-subtle);
+  border-radius: 0.25rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  color: #2b2f33;
+}
+.issue.warning {
+  border-left-color: var(--bs-warning);
+  background: var(--bs-warning-bg-subtle);
+}
+.issue:hover { filter: brightness(0.97); }
+.issue-section {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--app-muted);
+}
+.issue-group-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--app-muted);
+  margin-top: 0.7rem;
+}

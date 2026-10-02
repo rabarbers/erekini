@@ -1,0 +1,7 @@
+interface:
+  display_name: KatLang
+  short_description: High-precision calculations with KatLang
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  allow_implicit_invocation: true
