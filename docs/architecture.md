@@ -19,12 +19,14 @@ Lietotne sastāv no neliela Node.js servera un statiskas pārlūka lietotnes. Na
 
 ```
 source/
-  server.js                 HTTP serveris: pasniedz public/ un apstrādā POST /api/extract
+  server.js                 HTTP serveris: public/, POST /api/extract, GET /api/vat-status
+  server/vat.js             VID atvērto datu PVN reģistra pieprasījums un statusa noteikšana
   server/extract.js         OpenAI Responses API izsaukums, faila veida noteikšana, kļūdu paziņojumi
   server/extraction-schema.js  strukturētās izvades JSON shēma un norādījumi modelim
   public/                   vienīgā publiski pasniegtā mape
     index.html, css/app.css
     js/app.js               lietotāja saskarne (DOM, notikumi, attēlošana)
+    js/vat-check.js         PVN pārbaudes dzīvescikls un novēlotu atbilžu aizsardzība
     js/invoice.js           datu modelis, aprēķini, OpenAI datu pārnešana formā
     js/validation.js        determinētā validācija
     js/ubl.js               e-rēķina XML ģenerēšana
@@ -45,6 +47,14 @@ Moduļi `invoice.js`, `validation.js`, `ubl.js`, `codelists.js` un `decimal.js` 
 5. XML tiek izveidots pārlūkā (`buildInvoiceXml`) un lejupielādēts. Funkcija pati vēlreiz izpilda validāciju un atsakās veidot XML, ja ir kļūdas.
 
 Manuālā ievadē 1.–3. solis tiek izlaists. Rēķina dati netiek saglabāti ne serverī, ne pārlūkā.
+
+## VID PVN pārbaude
+
+Abām pusēm pēc dokumenta nolasīšanas un pēc reģistrācijas numura, PVN numura vai valsts maiņas automātiski veic PVN pārbaudi. Ievades notikumus apvieno ar 650 ms aizturi; poga ļauj pārbaudīt atkārtoti. `GET /api/vat-status` serverī pieprasa [VID PVN maksātāju atvērto datu kopu](https://data.gov.lv/dati/lv/dataset/pvn-maksataji), izmantojot CKAN `datastore_search` resursu `610910e9-e086-4c5b-a7ea-0a896a697672` un precīzu `Numurs` filtru. Pieprasījuma noildze ir 10 sekundes; atbildes netiek kešotas. VID tiek nosūtīts tikai meklētais identifikators.
+
+Ja PVN numurs norādīts, pārbauda tieši to, arī ja adreses valsts nav LV. Tukšam PVN laukam Latvijas 11 ciparu reģistrācijas numuru ar `LV` prefiksu izmanto tikai kā meklēšanas kritēriju. Formā kopē tikai aktīva atbildes ieraksta `Numurs`. Vēsturisko ierakstu vidū prioritāte ir `Aktivs = ir`; visi `nav` nozīmē neaktīvu, tukša rezultāta kopa — neatrastu. Nepilna, nezināma vai neveiksmīga atbilde nozīmē neizdevušos pārbaudi, nevis neaktīvu statusu.
+
+Ārvalstu PVN numuriem VID pārbaude netiek veikta. Esošu PVN numuru nepārraksta un nedzēš. Mainot identifikatorus vai ielādējot citu rēķinu, veco pieprasījumu atceļ un novēlotu atbildi ignorē. Pārbaudes stāvoklis ir atsevišķs no rēķina datiem un XML. Dati portālā tiek atjaunoti katru dienu; pārbauda pašreiz publicēto aktīvo statusu, nevis statusu rēķina izrakstīšanas datumā.
 
 ## OpenAI datu iegūšana
 

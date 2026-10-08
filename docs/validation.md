@@ -39,6 +39,8 @@ Validācijas kļūdām jābūt saprotamām un, ja iespējams, sasaistītām ar k
 
 Brīdinājums, ja rēķinā ir PVN ar likmi, bet pārdevējam nav PVN numura.
 
+**VID PVN statuss:** atsevišķa servera pārbaude abām Latvijas pusēm; par datu avotu un pieprasījumu skatīt `architecture.md`. Ja ievadītais PVN numurs nav aktīvs vai nav atrodams VID atvērtajos datos, saskarne rāda brīdinājumu pie PVN lauka un pārbaudes panelī. Pakalpojuma kļūme ir brīdinājums par neizdevušos pārbaudi. Aktīvam Latvijas numuram, kas atšķiras no norādītā reģistrācijas numura, rāda neatbilstības brīdinājumu. Šie brīdinājumi nebloķē XML: pārbaude rāda pašreizējo publicēto statusu, kas var atšķirties no statusa rēķina datumā. PVN numura esamība un tā formāts joprojām pakļauti determinētajiem e-rēķina noteikumiem. Automātiska aizpildīšana nemaina pozīciju PVN veidus; ja pievienotais numurs neatbilst tiem (piem., O kategorijai), to norāda esošā validācija.
+
 **Kopsummas:** avansa summa — skaitlis, nav negatīva, līdz 2 zīmēm aiz komata (BR-DEC-16).
 
 ## OpenAI rezultātu pārbaude

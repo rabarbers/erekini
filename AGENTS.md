@@ -26,6 +26,7 @@ Obligātos laukus atzīmē kā obligātus. Neģenerē e-rēķinu kā korektu, ja
 
 * E-rēķina specifikācija: https://docs.peppol.eu/poacc/billing/3.0/
 * Strukturēto datu iegūšanai no augšupielādētajiem rēķiniem izmanto OpenAI API.
+* Latvijas pušu PVN statusu pārbauda VID atvērtajos datos. PVN numuru automātiski aizpilda tikai no aktīva reģistra ieraksta, nevis pieņemot, ka tas ir `LV` un reģistrācijas numurs.
 
 ## Projekta struktūra
 

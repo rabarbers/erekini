@@ -38,3 +38,4 @@ Platumā zem 1200 px sānu panelis atrodas zem formas. Zem 992 px pozīciju tabu
 - Kļūda pie lauka parādās, kad lietotājs lauku ir atstājis, pēc augšupielādes vai pēc XML izveides mēģinājuma — lai, sākot ievadi no jauna, forma nebūtu pilna ar sarkaniem laukiem.
 - Sānu panelī vienmēr ir pilns kļūdu un brīdinājumu saraksts formas secībā; klikšķis uz ieraksta pāriet uz lauku.
 - Automātiski iegūtās kopsummas tiek rādītas kolonnā “Dokumentā” blakus aprēķinātajām; neatbilstības ir izceltas.
+- Katras puses kartē zem laukiem ir PVN pārbaudes statuss, atkārtotas pārbaudes poga un saite uz VID manuālo servisu. Statusa izmaiņas paziņo arī ekrānlasītājiem. Aktīvs statuss ir zaļš; neaktīvs, neatrasts numurs un pakalpojuma kļūme — dzeltena. Brīdinājumus par norādīto PVN numuru vai pārbaudes kļūmi rāda arī pie PVN lauka un sānu panelī.

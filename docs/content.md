@@ -25,3 +25,7 @@ Visi lietotāja saskarnes teksti ir latviešu valodā un paredzēti lietotājam,
 | Neapliek ar PVN | ārpus PVN piemērošanas jomas (O) |
 | Avansā samaksāts | iepriekš samaksātā summa (Paid amount) |
 | Datu pārbaude | validācija |
+
+## PVN statusa pārbaude
+
+Pie katras puses rāda PVN statusu, pogu “Pārbaudīt PVN statusu” un saiti “Pārbaudīt VID servisā”. Aktīvam ierakstam rāda numuru un, ja tas pievienots tukšam laukam, “Numurs aizpildīts no VID reģistra.” Neaktīvu vai neatrastu ievadīto PVN numuru izceļ ar brīdinājumu un aicina pārbaudīt partnera datus un rēķina datumu. Pakalpojuma kļūmes paziņojums pasaka, ka pārbaude neizdevās, un piedāvā atkārtotu vai manuālu pārbaudi. Ārvalstu numuram skaidri norāda, ka VID pārbaude pieejama tikai Latvijas PVN numuriem.

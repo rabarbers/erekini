@@ -12,6 +12,7 @@ import {
   PAYMENT_MEANS, ENDPOINT_SCHEMES, VAT_CATEGORIES, VAT_OPTIONS,
 } from './codelists.js';
 import { parseDecimal, toDisplayString } from './decimal.js';
+import { createVatChecker, vatCheckWarning, VID_MANUAL_URL } from './vat-check.js';
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const ACCEPTED_FILE = /\.(pdf|docx|png|jpe?g)$/i;
@@ -24,6 +25,37 @@ const state = {
   dirty: false,
   busy: false,
 };
+
+const vatChecker = createVatChecker({
+  async lookup(party, signal) {
+    let response;
+    try {
+      response = await fetch(`/api/vat-status?${new URLSearchParams(party)}`, { signal });
+    } catch {
+      throw new Error('Neizdevās pārbaudīt PVN statusu. Mēģiniet vēlreiz vai pārbaudiet VID servisā.');
+    }
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || !payload) throw new Error(payload?.error ?? 'Neizdevās pārbaudīt PVN statusu. Mēģiniet vēlreiz vai pārbaudiet VID servisā.');
+    return payload;
+  },
+  onChange: scheduleUpdate,
+  onAutofill(role) {
+    state.touched.add(`${role}.vatNo`);
+    syncControls();
+    markDirty();
+  },
+});
+
+function validationWithVat() {
+  const result = validateInvoice(state.invoice);
+  for (const role of ['seller', 'buyer']) {
+    const check = vatChecker.get(role);
+    const warning = vatCheckWarning(state.invoice[role], check);
+    if (warning) result.warnings.push({ field: `${role}.vatNo`, message: warning, alwaysVisible: true });
+    if (check?.status === 'error') result.warnings.push({ field: `${role}.vatNo`, message: check.message, alwaysVisible: true });
+  }
+  return result;
+}
 
 // ---------- DOM palīgfunkcijas ----------
 
@@ -218,7 +250,13 @@ function buildStaticForm() {
       path: `${role}.${f.key}`,
       hintId: f.key === 'endpointId' ? `hint-${role}-endpoint` : undefined,
     }));
-    $(`#${role}-fields`).replaceChildren(...fields.map(fieldElement));
+    $(`#${role}-fields`).replaceChildren(...fields.map(fieldElement),
+      h('div', { class: 'col-12' },
+        h('div', { id: `vat-status-${role}`, role: 'status', 'aria-live': 'polite' }),
+        h('div', { class: 'd-flex align-items-center flex-wrap gap-3 mt-2' },
+          h('button', { type: 'button', class: 'btn btn-sm btn-outline-secondary', dataset: { checkVat: role } }, 'Pārbaudīt PVN statusu'),
+          h('a', { href: VID_MANUAL_URL, target: '_blank', rel: 'noopener noreferrer', class: 'small' }, 'Pārbaudīt VID servisā')),
+        h('div', { class: 'form-text' }, 'Latvijas PVN numurus pārbauda automātiski. VID atvērtie dati tiek atjaunoti katru dienu.')));
   }
   $('#payment-fields').replaceChildren(...PAYMENT_FIELDS.map(fieldElement));
 
@@ -354,6 +392,8 @@ function onFieldInput(event) {
   const vatMatch = /^lines\.(\d+)\.vat$/.exec(path);
   if (vatMatch) applyVatOption(state.invoice.lines[Number(vatMatch[1])], el.value);
   else setPath(state.invoice, path, el.value);
+  const partyMatch = /^(seller|buyer)\.(regNo|vatNo|country)$/.exec(path);
+  if (partyMatch) vatChecker.schedule(partyMatch[1], state.invoice[partyMatch[1]]);
   if (el.tagName === 'SELECT') state.touched.add(path);
   markDirty();
   scheduleUpdate();
@@ -379,7 +419,7 @@ function scheduleUpdate() {
 
 function update() {
   const invoice = state.invoice;
-  const result = validateInvoice(invoice);
+  const result = validationWithVat();
   const { calc } = result;
 
   // Pozīciju summas un "Cita likme…" lauki
@@ -401,10 +441,40 @@ function update() {
   }
 
   renderEndpointHints();
+  renderVatStatus();
   renderTotals(result);
   renderRequired();
   renderInlineIssues(result);
   renderValidationPanel(result);
+}
+
+function renderVatStatus() {
+  for (const role of ['seller', 'buyer']) {
+    const check = vatChecker.get(role);
+    const party = state.invoice[role];
+    const selector = `#vat-status-${role}`;
+    const button = document.querySelector(`[data-check-vat="${role}"]`);
+    button.disabled = ['pending', 'loading'].includes(check?.status);
+    const warning = vatCheckWarning(party, check);
+    if (warning) setStatus(selector, 'warning', warning);
+    else if (check?.status === 'active') {
+      setStatus(selector, 'success', `Aktīvs PVN maksātājs — ${check.vatNo}.${check.autofilled ? ' Numurs aizpildīts no VID reģistra.' : ''}`);
+    } else if (check?.status === 'inactive') {
+      setStatus(selector, 'warning', 'VID atvērtajos datos nav aktīvs PVN maksātājs.');
+    } else if (check?.status === 'not_found') {
+      setStatus(selector, 'warning', 'Numurs VID PVN reģistrā nav atrasts. PVN numurs netika pievienots.');
+    } else if (check?.status === 'error') {
+      setStatus(selector, 'warning', check.message);
+    } else if (['pending', 'loading'].includes(check?.status)) {
+      setStatus(selector, 'loading', 'Pārbauda PVN statusu VID atvērtajos datos…');
+    } else {
+      setStatus(selector, null);
+      $(selector).textContent = check?.status === 'unsupported'
+        ? 'VID pārbaude pieejama tikai Latvijas PVN numuriem.'
+        : 'PVN statusa pārbaudei ievadiet PVN vai Latvijas reģistrācijas numuru.';
+      $(selector).classList.add('small');
+    }
+  }
 }
 
 function renderEndpointHints() {
@@ -474,6 +544,7 @@ function renderRequired() {
 }
 
 function issueVisible(issue) {
+  if (issue.alwaysVisible) return true;
   if (state.showAll) return true;
   return [issue.field, ...(issue.alsoFields ?? [])].some((f) => state.touched.has(f)
     || (f.endsWith('.vatRate') && state.touched.has(f.replace('.vatRate', '.vat'))));
@@ -599,12 +670,14 @@ function newManualInvoice() {
 }
 
 function loadInvoice(invoice, { showAll }) {
+  vatChecker.reset();
   state.invoice = invoice;
   state.touched = new Set();
   state.showAll = showAll;
   renderLines();
   syncControls();
   update();
+  for (const role of ['seller', 'buyer']) vatChecker.schedule(role, invoice[role], { immediate: true });
 }
 
 async function handleFile(file) {
@@ -649,7 +722,7 @@ async function handleFile(file) {
     } else if (payload.data.documentType === 'other') {
       notes.push('Dokuments, iespējams, nav rēķins — rūpīgi pārbaudiet iegūtos datus.');
     }
-    const { errors, warnings } = validateInvoice(state.invoice);
+    const { errors, warnings } = validationWithVat();
     if (errors.length || warnings.length) {
       notes.push(`Pārbaudes rezultāts: ${plural(errors.length, 'kļūda', 'kļūdas')}, ${plural(warnings.length, 'brīdinājums', 'brīdinājumi')} — skatiet sadaļu “Datu pārbaude”.`);
     }
@@ -674,7 +747,7 @@ function downloadText(text, fileName) {
 }
 
 function generateXml() {
-  const { errors, warnings } = validateInvoice(state.invoice);
+  const { errors, warnings } = validationWithVat();
   if (errors.length) {
     state.showAll = true;
     update();
@@ -704,6 +777,10 @@ function bindEvents() {
   form.addEventListener('input', onFieldInput);
   form.addEventListener('change', onFieldInput);
   form.addEventListener('submit', (e) => e.preventDefault());
+  form.addEventListener('click', (e) => {
+    const button = e.target.closest('[data-check-vat]');
+    if (button) vatChecker.schedule(button.dataset.checkVat, state.invoice[button.dataset.checkVat], { force: true, immediate: true });
+  });
   form.addEventListener('focusout', (e) => {
     const path = e.target.dataset?.field;
     if (path && !state.touched.has(path)) {

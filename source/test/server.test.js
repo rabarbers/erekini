@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import { createServer } from '../server.js';
 import { ExtractionError } from '../server/extract.js';
+import { VatLookupError } from '../server/vat.js';
 import { EXTRACTED_A } from './helpers/fixtures.js';
 
 let server;
@@ -10,6 +11,7 @@ let baseUrl;
 let apiKey = 'sk-test';
 let extractCalls = [];
 let extractImpl = async () => ({ data: EXTRACTED_A, model: 'gpt-test' });
+let vatImpl;
 
 before(async () => {
   server = createServer({
@@ -19,9 +21,35 @@ before(async () => {
     },
     getApiKey: async () => apiKey,
     maxFileBytes: 1024,
+    lookupVat: (party) => vatImpl(party),
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
+});
+
+test('GET /api/vat-status: nodod identifikatorus un pasniedz rezultātu bez saglabāšanas', async () => {
+  vatImpl = async (party) => {
+    assert.deepEqual(party, { country: 'LV', regNo: '40003052786', vatNo: '' });
+    return { status: 'active', vatNo: 'LV40003052786' };
+  };
+  const res = await fetch(`${baseUrl}/api/vat-status?country=LV&regNo=40003052786`);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers.get('cache-control'), 'no-store');
+  assert.deepEqual(await res.json(), { status: 'active', vatNo: 'LV40003052786' });
+  assert.equal((await fetch(`${baseUrl}/api/vat-status`, { method: 'POST' })).status, 405);
+});
+
+test('PVN API kļūdas atgriež latviski ar atbilstošu HTTP statusu', async () => {
+  for (const status of [400, 502, 504]) {
+    vatImpl = async () => { throw new VatLookupError(status, 'Neizdevās pārbaudīt PVN statusu.'); };
+    const res = await fetch(`${baseUrl}/api/vat-status?vatNo=LV40003052786`);
+    assert.equal(res.status, status);
+    assert.equal((await res.json()).error, 'Neizdevās pārbaudīt PVN statusu.');
+  }
+  vatImpl = async () => { throw new Error('internal exception'); };
+  const res = await fetch(`${baseUrl}/api/vat-status`);
+  assert.equal(res.status, 502);
+  assert.doesNotMatch((await res.json()).error, /internal exception/);
 });
 
 after(() => new Promise((resolve) => server.close(resolve)));

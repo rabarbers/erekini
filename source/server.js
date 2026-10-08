@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { extractInvoiceData, ExtractionError, MAX_FILE_BYTES, DEFAULT_MODEL } from './server/extract.js';
+import { lookupVatStatus, VatLookupError } from './server/vat.js';
 
 const SOURCE_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(SOURCE_DIR, 'public');
@@ -138,10 +139,22 @@ export function createServer({
   getApiKey = loadApiKey,
   model = process.env.OPENAI_MODEL || DEFAULT_MODEL,
   maxFileBytes = MAX_FILE_BYTES,
+  lookupVat = lookupVatStatus,
 } = {}) {
   return http.createServer(async (req, res) => {
     try {
-      const { pathname } = new URL(req.url, 'http://localhost');
+      const { pathname, searchParams } = new URL(req.url, 'http://localhost');
+      if (pathname === '/api/vat-status') {
+        if (req.method !== 'GET') return sendJson(res, 405, { error: 'Metode nav atļauta.' });
+        try {
+          const result = await lookupVat({ country: searchParams.get('country') ?? 'LV',
+            regNo: searchParams.get('regNo') ?? '', vatNo: searchParams.get('vatNo') ?? '' });
+          return sendJson(res, 200, result);
+        } catch (err) {
+          if (err instanceof VatLookupError) return sendJson(res, err.status, { error: err.message });
+          return sendJson(res, 502, { error: 'Neizdevās pārbaudīt PVN statusu. Mēģiniet vēlreiz vai pārbaudiet VID servisā.' });
+        }
+      }
       if (pathname === '/api/extract') {
         if (req.method !== 'POST') return sendJson(res, 405, { error: 'Metode nav atļauta.' });
         return await handleExtract(req, res, { extract, getApiKey, model, maxFileBytes });
